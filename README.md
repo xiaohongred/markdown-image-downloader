@@ -1,24 +1,10 @@
 # Markdown Image Downloader
 
-A Python script that automatically downloads and manages images referenced in markdown files, storing them locally in an `_attachments` folder. This script is particularly useful for maintaining local copies of images in markdown documentation and ensuring consistent image availability.
+A Python package that automatically downloads and manages images referenced in markdown files, storing them locally in an `_attachments` folder. This script is particularly useful for maintaining local copies of images in markdown documentation and ensuring consistent image availability.
 
 Or just for Obsidian's Readwise export, which I made this for.
 
 Previously hosted on [GitHub Gist](https://gist.github.com/mufidu/f7b795f844f1ee4dc78e55123d5a398b). Moved here to allow for easier maintenance and contributions, if any. Also published to [PyPI](https://pypi.org/project/markdown-image-downloader) for convenience.
-
-## Features
-
-- Uses custom HTTP headers to avoid download blocks
-- Downloads images from URLs referenced in markdown files
-- Creates local copies of images in an `_attachments` directory
-- Automatically updates links in the markdown files with new local image paths
-- Compresses large images to reduce storage space
-- Supports multithreaded concurrent downloads
-- Uses rate limit to prevent server overload and download blocks
-- Progress bar for tracking download status
-- Maintains detailed logging of error operations
-- Sanitizes filenames for cross-platform compatibility
-- Supports for rerunning the script without re-downloading images
 
 ## Requirements
 
@@ -52,6 +38,20 @@ This will:
 2. Download any images referenced in the markdown files
 3. Store them in `../Readwise/Articles/_attachments`
 4. Update the markdown files to reference the local copies
+
+## Features
+
+- Uses custom HTTP headers to avoid download blocks
+- Downloads images from URLs referenced in markdown files
+- Creates local copies of images in an `_attachments` directory
+- Automatically updates links in the markdown files with new local image paths
+- Compresses large images to reduce storage space
+- Supports multithreaded concurrent downloads
+- Uses rate limit to prevent server overload and download blocks
+- Progress bar for tracking download status
+- Maintains detailed logging of error operations
+- Sanitizes filenames for cross-platform compatibility
+- Supports for rerunning the script without re-downloading images
 
 ## How It Works
 
