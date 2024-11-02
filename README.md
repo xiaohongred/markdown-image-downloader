@@ -4,11 +4,7 @@ A Python script that automatically downloads and manages images referenced in ma
 
 Or just for Obsidian's Readwise export, which I made this for.
 
-Previously hosted on [GitHub Gist](https://gist.github.com/mufidu/f7b795f844f1ee4dc78e55123d5a398b). Moved here to allow for easier maintenance and contributions, if any.
-
-## TODO
-
-- [ ] Publish to PyPI
+Previously hosted on [GitHub Gist](https://gist.github.com/mufidu/f7b795f844f1ee4dc78e55123d5a398b). Moved here to allow for easier maintenance and contributions, if any. Also published to [PyPI](https://pypi.org/project/markdown-image-downloader) for convenience.
 
 ## Features
 
@@ -27,33 +23,28 @@ Previously hosted on [GitHub Gist](https://gist.github.com/mufidu/f7b795f844f1ee
 ## Requirements
 
 ```
-Python
-PIL (Pillow) for image processing
-tqdm for progress bar
+Python 3.9+
 ```
 
 ## Installation
 
-1. Clone this repository or download the script
-    ```bash
-    git clone https://github.com/mufidu/markdown-image-downloader
-    ```
-2. Install required packages:
-   ```bash
-   pip install Pillow tqdm
-   ```
+Install directly from PyPI using pip:
+
+```bash
+pip install markdown-image-downloader
+```
 
 ## Usage
 
-Run the script from the command line, providing the folder containing your markdown files as an argument:
+Run the package from the command line, providing the folder containing your markdown files as an argument:
 
 ```bash
-python src/index.py <folder_name>
+markdown-image-downloader <folder_name>
 ```
 
 ### Example
 ```bash
-python src/index.py ../Readwise/Articles
+markdown-image-downloader ../Readwise/Articles
 ```
 
 This will:
