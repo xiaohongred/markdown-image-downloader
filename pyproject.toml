@@ -5,7 +5,7 @@ description = "A tool to download and organize images referenced in markdown fil
 authors = [{ name = "mufidu", email = "mufid.to@gmail.com" }]
 dependencies = ["pillow>=11.0.0", "tqdm>=4.66.5"]
 readme = "README.md"
-requires-python = ">= 3.8"
+requires-python = ">= 3.9"
 license = "MIT"
 keywords = ["markdown", "image", "downloader", "automation"]
 
