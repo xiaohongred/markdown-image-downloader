@@ -352,7 +352,7 @@ class ImageDownloader:
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python download_imgs.py <folder_name>")
+        print("Usage: markdown-image-downloader <folder_name>")
         sys.exit(1)
 
     FOLDER_NAME = sys.argv[1]
