@@ -192,7 +192,8 @@ class ImageDownloader:
         if not ext:
             ext = ".jpg"  # Default extension if none is present
 
-        sanitized_base = self.sanitize_filename(base_name)
+        # Add a random string to the filename to avoid conflicts
+        sanitized_base = base_name + "_" + str(time.time()).replace(".", "")
         sanitized_ext = self.sanitize_filename(ext)
 
         return f"{sanitized_base}{sanitized_ext}"
