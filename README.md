@@ -29,11 +29,13 @@ markdown-image-downloader <folder_name>
 ```
 
 ### Example
+
 ```bash
 markdown-image-downloader ../Readwise/Articles
 ```
 
 This will:
+
 1. Scan all markdown files in the `../Readwise/Articles` folder
 2. Download any images referenced in the markdown files
 3. Store them in `../Readwise/Articles/_attachments`
@@ -66,20 +68,24 @@ This will:
 ## Features in Detail
 
 ### Image Compression
+
 - Automatically compresses large images
 - Maintains reasonable quality through progressive compression
 - Converts RGBA images to RGB with white background
 
 ### Filename Handling
+
 - Preserves original filenames
 - Sanitizes filenames for cross-platform compatibility
 
 ### Concurrent Processing
+
 - Uses ThreadPoolExecutor for parallel downloads
 - Includes progress bar for tracking downloads
 - Implements rate limiting to prevent server overload
 
 ### Error Handling
+
 - Comprehensive logging of all operations
 - Graceful handling of download failures
 - Skips already processed images
@@ -87,6 +93,7 @@ This will:
 ## Logging
 
 The script creates detailed logs in a `logs` directory:
+
 - Location: `./logs/image_downloader.log`
 - Includes timestamps, operation details, and error messages
 - New log file created for each run
