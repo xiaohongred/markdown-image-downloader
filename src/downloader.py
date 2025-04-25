@@ -132,7 +132,8 @@ class ImageDownloader:
                 bg = Image.new("RGB", img.size, (255, 255, 255))
                 bg.paste(img, mask=img.split()[3])
                 img = bg
-
+            else:
+                img = img.convert("RGB")
             # Initial quality
             quality = 75
             output = io.BytesIO()
@@ -220,7 +221,8 @@ class ImageDownloader:
                     raise FileNotFoundError(f"Local file not found: {absolute_path}")
             else:
                 # Download from URL
-                req = urllib.request.Request(img_url, headers=self.headers)
+                encode_url = urllib.parse.quote(img_url, safe='/:?=&@') # link may contain other language 
+                req = urllib.request.Request(encode_url, headers=self.headers)
                 with urllib.request.urlopen(req, timeout=self.timeout) as response:
                     content = response.read()
 
