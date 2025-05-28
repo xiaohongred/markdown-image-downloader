@@ -14,7 +14,9 @@ from urllib.error import HTTPError, URLError
 
 from PIL import Image
 from tqdm import tqdm
-
+from playwright.sync_api import sync_playwright
+import tempfile
+import shutil
 
 class ImageDownloader:
     def __init__(self, folder_name: str):
@@ -132,8 +134,12 @@ class ImageDownloader:
                 bg = Image.new("RGB", img.size, (255, 255, 255))
                 bg.paste(img, mask=img.split()[3])
                 img = bg
+            elif img.mode == "P":
+                return image_data
+                # img = img.convert("RGB")
             else:
-                img = img.convert("RGB")
+                return image_data
+                # img = img.convert("RGB")
             # Initial quality
             quality = 75
             output = io.BytesIO()
@@ -162,42 +168,123 @@ class ImageDownloader:
             return image_data
 
     def sanitize_filename(self, filename: str) -> str:
-        """Sanitize filename to remove illegal characters."""
+        """Sanitize filename to remove illegal characters for Windows."""
+        # Characters not allowed in Windows
+        illegal_chars = r'[<>:"/\\|?*\x00-\x1f]'
         # Replace illegal characters with underscore
-        illegal_chars = r'[<>:"/\\|?*%]'
         sanitized = re.sub(illegal_chars, "_", filename)
-        # Remove any consecutive underscores
+        # Remove consecutive underscores
         sanitized = re.sub(r"_+", "_", sanitized)
-        # Remove leading/trailing underscores
+        # Remove leading and trailing underscores
         sanitized = sanitized.strip("_")
+        # If filename is empty, use default name
         return sanitized if sanitized else "image"
 
     def get_markdown_filename(self, img_url: str) -> str:
         """Extract and sanitize filename from URL or generate one if not present."""
-        # Decode the URL first
-        decoded_url = urllib.parse.unquote(img_url)
+        try:
+            # Decode the URL first
+            decoded_url = urllib.parse.unquote(img_url)
 
-        # Parse the URL and get the path
-        parsed_url = urllib.parse.urlparse(decoded_url)
-        path = parsed_url.path
+            # Parse the URL and get the path
+            parsed_url = urllib.parse.urlparse(decoded_url)
+            path = parsed_url.path
 
-        # Extract filename from path, ignoring query parameters
-        filename = os.path.basename(path.split("?")[0])
+            # Extract filename from path, ignoring query parameters
+            filename = os.path.basename(path.split("?")[0])
 
-        if not filename:
-            # If no filename in URL, use the domain name or 'image'
-            filename = parsed_url.netloc.split(".")[0] or "image"
+            if not filename:
+                # If no filename in URL, use the domain name or 'image'
+                filename = parsed_url.netloc.split(".")[0] or "image"
 
-        # Sanitize the filename
-        base_name, ext = os.path.splitext(filename)
-        if not ext:
-            ext = ".jpg"  # Default extension if none is present
+            # Sanitize the filename
+            base_name, ext = os.path.splitext(filename)
+            if not ext:
+                ext = ".jpg"  # Default extension if none is present
 
-        # Add a random string to the filename to avoid conflicts
-        sanitized_base = base_name + "_" + str(time.time()).replace(".", "")
-        sanitized_ext = self.sanitize_filename(ext)
+            # Limit filename length, keep extension
+            max_length = 100  # Set maximum length
+            if len(base_name) > max_length:
+                base_name = base_name[:max_length]
 
-        return f"{sanitized_base}{sanitized_ext}"
+            # Add timestamp to ensure unique filename
+            timestamp = str(time.time()).replace(".", "")
+            
+            # Process base name and extension separately
+            sanitized_base = self.sanitize_filename(base_name)
+            sanitized_ext = self.sanitize_filename(ext)
+
+            # Ensure final filename doesn't exceed system limits
+            final_filename = f"{sanitized_base}_{timestamp}{sanitized_ext}"
+            if len(final_filename) > 200:  # Leave some margin
+                final_filename = f"img_{timestamp}{sanitized_ext}"
+
+            # Final check to ensure filename is valid
+            final_filename = self.sanitize_filename(final_filename)
+            
+            return final_filename
+        except Exception as e:
+            logging.error(f"Error generating filename: {str(e)}")
+            # If error occurs, return a safe default filename
+            return f"image_{int(time.time())}.jpg"
+
+    def download_image_use_playwright(self, img_url: str, file_name: str) -> Tuple[str, str, bool]:
+        """Download an image using Playwright."""
+        try:
+            # Skip if already in _attachments folder
+            if self.is_attachment_path(img_url):
+                logging.info(
+                    f"Skipping {img_url} as it's already in _attachments folder"
+                )
+                return img_url, img_url, True
+
+            # Check if the URL is relative to the markdown file location
+            if not urllib.parse.urlparse(img_url).scheme:
+                # Convert relative path to absolute path
+                absolute_path = (Path(self.folder_name) / img_url).resolve()
+                if absolute_path.exists():
+                    # If it's a local file, just copy it to attachments
+                    with open(absolute_path, "rb") as f:
+                        content = f.read()
+                else:
+                    raise FileNotFoundError(f"Local file not found: {absolute_path}")
+            else:
+                # Download from URL using Playwright
+                with sync_playwright() as p:
+                    try:
+                        # Access image links using a browser page
+                        request_context = p.request.new_context(
+                            extra_http_headers=self.headers
+                        )
+                        response = request_context.get(img_url, timeout=20000)
+                        if response.status == 200:
+                            content = response.body()
+                        else:
+                            raise Exception(f"Failed to load image: {img_url} (status: {response.status})")
+                    finally:
+                        pass
+
+            # Compress the image
+            compressed_content = self.compress_image(content)
+
+            # Use the same filename as in the markdown link, but sanitized
+            filename = self.get_markdown_filename(img_url)
+
+            local_path = self.attachments_dir / filename
+
+            with open(local_path, "wb") as f:
+                f.write(compressed_content)
+
+            # Convert space to %20 in the filename
+            filename = filename.replace(" ", "%20")
+
+            return img_url, f"_attachments/{filename}", True
+
+        except Exception as e:
+            logging.error(
+                f"Unexpected error downloading {img_url} from {file_name}: {str(e)}"
+            )
+            return img_url, "", False
 
     def download_image(self, img_url: str, file_name: str) -> Tuple[str, str, bool]:
         """Download a single image and return the new local path."""
@@ -300,7 +387,7 @@ class ImageDownloader:
 
                 for img in images:
                     future = executor.submit(
-                        self.download_image, img[1], file_path.name
+                        self.download_image_use_playwright, img[1], file_path.name
                     )
                     futures.append(future)
                     file_image_map[future] = (file_path, content)
